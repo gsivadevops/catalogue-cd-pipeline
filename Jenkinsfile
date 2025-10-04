@@ -1,23 +1,23 @@
 pipeline {
-  agent {
-      label 'AGENT-1'
-  }
-  environment {
-      appVersion = ''
-      REGION = "us-east-1"
-      ACCOUNT_ID = "020027209432"
-      PROJECT = "roboshop"
-      COMPONENT = "catalogue"
-  }
-  options {
-      timeout(time: 30, unit: 'MINUTES')
-      disableConcurrentBuilds()
-  }
-  parameters {
-      string(name: 'appVersion', description: 'Image version of the application')
-      choice(name: 'deploy_to', choices: ['dev', 'qa', 'prod'], description: 'Pick the Environment')
-  }
-  stages {         
+    agent {
+        label 'AGENT-1'
+    }
+    environment {
+        appVersion = ''
+        REGION = "us-east-1"
+        ACCOUNT_ID = "020027209432"
+        PROJECT = "roboshop"
+        COMPONENT = "catalogue"
+    }
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+    parameters {
+        string(name: 'appVersion', description: 'Image version of the application')
+        choice(name: 'deploy_to', choices: ['dev', 'qa', 'prod'], description: 'Pick the Environment')
+    }
+    stages {         
         stage('Deploy') {
             steps {
                 script {
@@ -59,30 +59,61 @@ pipeline {
                 }
             }
         } 
+        
+
+        
         // API Testing
         stage('Functional Testing'){
             when{
-                expression { params.deploy_to == "dev" }
+                expression { params.deploy_to = "dev" }
             }
-            steps{
+             steps{
                 script{
                     echo "Run functional test cases"
                 }
             }
         }
-  }
-  post {
-    always {
-      echo 'I will always say Hello Again!'
-      deleteDir()
+        // All components testing
+        stage('Integration Testing'){
+            when{
+                expression { params.deploy_to = "qa" }
+            }
+             steps{
+                script{
+                    echo "Run Integration test cases"
+                }
+            }
+        }
+        stage('PROD Deploy') {
+            when{
+                expression { params.deploy_to = "prod" }
+            }
+            steps {
+                script {
+                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                        sh """
+                            echo "get cr number"
+                            echo "check with in the deployment window"
+                            echo "is CR approved"
+                            echo "trigger PROD deploy"
+                        """
+                    }
+                }
+            }
+        }
     }
-    success {
-      echo 'Hello Success'
+    post {
+        always {
+        echo 'I will always say Hello Again!'
+        deleteDir()
+        }
+        success {
+        echo 'Hello Success'
+        }
+        failure {
+        echo 'Hello Failure'
+        }
     }
-    failure {
-      echo 'Hello Failure'
-    }
-  }
 }
 
 
