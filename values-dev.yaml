@@ -1,5 +1,5 @@
 deployment:
-  imageURL: gsivadvops/catalogue
+  imageURL: 020027209432.dkr.ecr.us-east-1.amazonaws.com/roboshop/catalogue
   imageVersion: IMAGE_VERSION
 hpa:
   maxReplicas: 10
